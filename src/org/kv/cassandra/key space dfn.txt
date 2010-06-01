@@ -1,0 +1,14 @@
+<!-- Cassandra Schema Used -->
+<!-- Only the ReplicationFactor was ever changed -->
+<Keyspaces>
+    <Keyspace Name="Keyspace1">
+
+        <ColumnFamily Name="BlobData" CompareWith="BytesType"/>
+        <ColumnFamily Name="ManyInts" CompareWith="BytesType"/>
+
+        <ReplicaPlacementStrategy>org.apache.cassandra.locator.RackUnawareStrategy</ReplicaPlacementStrategy>
+        <ReplicationFactor>1</ReplicationFactor>
+        <EndPointSnitch>org.apache.cassandra.locator.EndPointSnitch</EndPointSnitch>
+
+    </Keyspace>
+</Keyspaces>

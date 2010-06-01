@@ -1,0 +1,13 @@
+{
+    storageType: "CASSANDRA",
+    cassWriteConsistencyLevel: "ANY",
+    cassReadConsistencyLevel: "ONE",
+    connectionCount: 48,
+    testDurationSecs: 240,
+    serverHosts: ["volt4a", "volt4b", "volt4c"],
+    keySizeInChars: 50,
+    valueSizeInBytes: 12000,
+    initialSize: 100000,
+    getsFraction: 0.5,
+    benchmarkLevel: 3
+}

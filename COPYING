@@ -1,0 +1,20 @@
+VoltDB-authored benchmark code (c) VoltDB and licensed under the MIT license
+
+VoltDB server and client (c) VoltDB and licensed under the GPL 3
+http://www.gnu.org/licenses/gpl-3.0.html
+
+Apache Cassandra  Thift and log4j distributed under the Apache License, version 2.0.
+http://www.apache.org/licenses/LICENSE-2.0.html
+
+MySQL Client (c) MySQL/Sun/Oracle and distributed under GPL 2 with a FOSS exception.
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+http://www.mysql.com/about/legal/licensing/foss-exception/
+
+JUnit distributed under the CPL 1.0.
+http://junit.sourceforge.net/cpl-v10.html
+
+slf4j (c) QOS.ch and distributed under the MIT license
+http://www.slf4j.org/license.html
+
+JSON Java (c) JSON.org distributed under a modified BSD/MIT licensed with good/evil clause.
+http://www.JSON.org/license.html

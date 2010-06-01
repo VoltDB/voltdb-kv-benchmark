@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<project default="default" name="KVBenchmark">
+
+<path id='project.classpath'>
+    <pathelement location='bin' />
+    <fileset dir='jars'>
+        <include name='*.jar' />
+    </fileset>
+    <pathelement path="${java.class.path}"/>
+</path>
+
+<target name="default"
+    depends="compile"
+/>
+
+<target name="compile">
+    <mkdir dir='bin' />
+    <!-- compile ddl for VoltDB -->
+    <copy todir='bin/org/kv/voltdb'>
+        <fileset dir="src/org/kv/voltdb">
+            <include name="*.sql"/>
+        </fileset>
+    </copy>
+    <!-- compile the individual source directories -->
+    <javac
+        target="1.6"
+        srcdir="src"
+        destdir='bin'
+        debug='true'>
+        <classpath refid="project.classpath" />
+    </javac>
+</target>
+
+<target name="run" depends="compile">
+    <java fork="true" failonerror="true"
+        classname="org.kv.Driver">
+        <classpath refid='project.classpath' />
+        <jvmarg value="-Xmx512m" />
+        <assertions><disable/></assertions>
+        <arg value="${config}" />
+    </java>
+</target>
+
+<target name="voltprep" depends="compile">
+    <java fork="true" failonerror="true"
+        classname="org.kv.voltdb.VoltConnection">
+        <classpath refid='project.classpath' />
+        <jvmarg value="-Xmx512m" />
+        <assertions><disable/></assertions>
+        <arg value="${sitesperhost}" />
+        <arg value="${hostcount}" />
+        <arg value="${kfactor}" />
+        <arg value="${leader}" />
+    </java>
+</target>
+
+<target name="voltserver">
+    <java fork="true" failonerror="true"
+        classname="org.voltdb.VoltDB">
+        <jvmarg value="-Djava.library.path=lib" />
+        <jvmarg value="-server" />
+        <jvmarg value="-Xmx2048m" />
+        <arg value="catalog"/>
+        <arg value="kv.jar"/>
+        <classpath refid='project.classpath' />
+        <assertions><disable/></assertions>
+    </java>
+</target>
+
+</project>

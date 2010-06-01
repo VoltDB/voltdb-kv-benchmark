@@ -1,0 +1,36 @@
+VoltDB's Key-Value Benchmark Code.
+
+
+LICENSE AND REDISTRIBUTION
+
+Please see the COPYING file for license info on the stuff in this distribution. IANAL, but I think the GPL3 from VoltDB trumps everything and means the overall distribution is GPL3 licensed. Feel free to redistribute under the terms of the GPL3. If you redistribute without the VoltDB server and client software, you may have more flexibility. Note the benchmark code itself is MIT licensed.
+
+If you modify the code or do anything interesting with it, we'd love to hear about it.
+
+
+REQUIREMENTS
+
+This code requires Java 1.6 and Ant 1.7. That's all that should be required to drive benchmarks from a system. The VoltDB server software is included in this distribution. To run a VoltDB server you also must be running a VoltDB compatible Linux or MacOS system. Cassandra and MySQL servers must be downloaded, installed and configured separately.
+
+See the indivdual release notes for individual pieces of software to ensure your system is compliant.
+
+
+USING THE BENCHMARK
+
+To build the benchmark driver code, run "ant compile" from the root of the project.
+
+To run a benchmark:
+1. Modify an existing JSON configuration file or create a new one.
+2. Start the server you want to test.
+3. Run "ant run -Dconfig=configuration.json", using the name of your configuration file instead of configuration.json.
+
+
+USING THE INCLUDED VOLTDB SERVER
+
+On your server, from the root of the benchmark distribution, run "ant voltprep -Dsitesperhost=5 -Dhostcount=1 -Dkfactor=0 -Dleader=localhost" with your values in the right places. This will create the VoltDB application catalog, "kv.jar".
+
+To start the server, run "ant voltserver".
+
+To run the server on multiple nodes, distribute "kv.jar" to each node and run "ant voltserver" on each node.
+
+To stop the server, press ctrl-c.
