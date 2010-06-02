@@ -3,7 +3,6 @@
     connectionCount: 1,
     testDurationSecs: 30,
     serverHosts: ["localhost"],
-    keySizeInChars: 50,
     valueSizeInBytes: 1000,
     initialSize: 1000,
     getsFraction: 0.5

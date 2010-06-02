@@ -2,10 +2,9 @@
     storageType: "VOLTDB",
     connectionCount: 8,
     testDurationSecs: 60,
-    serverHosts: ["volt3a"],
-    keySizeInChars: 50,
+    serverHosts: ["localhost"],
     valueSizeInBytes: 12000,
-    initialSize: 100000,
+    initialSize: 10000,
     getsFraction: 0.5,
     benchmarkLevel: 3
 }
