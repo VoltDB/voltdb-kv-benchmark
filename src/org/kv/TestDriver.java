@@ -38,51 +38,51 @@ public class TestDriver extends TestCase {
         return config;
     }
 
-	/*public void testVoltKV() {
-		VoltConnection.main(new String[] { "6" });
+    /*public void testVoltKV() {
+        VoltConnection.main(new String[] { "6" });
 
-		VoltDB.Configuration voltConfig = new VoltDB.Configuration();
-		voltConfig.m_backend = BackendTarget.NATIVE_EE_JNI;
-		voltConfig.m_pathToCatalog = "kv.jar";
-		ServerThread server = new ServerThread(voltConfig);
-		server.start();
-		server.waitForInitialization();
+        VoltDB.Configuration voltConfig = new VoltDB.Configuration();
+        voltConfig.m_backend = BackendTarget.NATIVE_EE_JNI;
+        voltConfig.m_pathToCatalog = "kv.jar";
+        ServerThread server = new ServerThread(voltConfig);
+        server.start();
+        server.waitForInitialization();
 
-		KVConfig config = getBaseConfig();
-		config.storageType = "VOLTDB";
-		config.connectionCount = 8;
+        KVConfig config = getBaseConfig();
+        config.storageType = "VOLTDB";
+        config.connectionCount = 8;
 
-		Driver driver = new Driver(config);
-		driver.runBenchmark();
+        Driver driver = new Driver(config);
+        driver.runBenchmark();
 
-		try {
-			server.shutdown();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}*/
+        try {
+            server.shutdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }*/
 
-	public void testMemcacheKV() {
-		KVConfig config = getBaseConfig();
-		config.storageType = "MYSQL";
-		config.connectionCount = 4;
-		//config.mysqlUseMemcache = 1;
+    public void testMemcacheKV() {
+        KVConfig config = getBaseConfig();
+        config.storageType = "MYSQL";
+        config.connectionCount = 4;
+        //config.mysqlUseMemcache = 1;
 
-		Driver driver = new Driver(config);
-		driver.runBenchmark();
-	}
+        Driver driver = new Driver(config);
+        driver.runBenchmark();
+    }
 
-	/*public void testCassandra() {
-		KVConfig config = getBaseConfig();
-		//config.serverHosts = new String[] { "volt3a", "volt3b", "volt3c" };
-		config.serverHosts = new String[] { "volt3a" };
-		config.storageType = "CASSANDRA";
-		config.connectionCount = 64;
+    /*public void testCassandra() {
+        KVConfig config = getBaseConfig();
+        //config.serverHosts = new String[] { "volt3a", "volt3b", "volt3c" };
+        config.serverHosts = new String[] { "volt3a" };
+        config.storageType = "CASSANDRA";
+        config.connectionCount = 64;
 
-		config.cassReadConsistencyLevel = "ONE";
-		config.cassWriteConsistencyLevel = "ANY";
+        config.cassReadConsistencyLevel = "ONE";
+        config.cassWriteConsistencyLevel = "ANY";
 
-		Driver driver = new Driver(config);
-		driver.runBenchmark();
-	}*/
+        Driver driver = new Driver(config);
+        driver.runBenchmark();
+    }*/
 }

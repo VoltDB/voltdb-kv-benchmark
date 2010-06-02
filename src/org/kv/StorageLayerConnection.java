@@ -30,21 +30,21 @@ package org.kv;
 public abstract class StorageLayerConnection {
 
     // methods for connection management
-	public abstract void initializeAndConnect(KVConfig config) throws Exception;
-	public void syncUp() throws Exception {} // needed for async voltdb more than others
+    public abstract void initializeAndConnect(KVConfig config) throws Exception;
+    public void syncUp() throws Exception {} // needed for async voltdb more than others
     public abstract void close() throws Exception;
 
-	// methods for data loading
-	public abstract void queueBlobInsert(String key, byte[] value, RuntimeStats stats) throws Exception;
-	public abstract void queueInsertIntegerSet(String key, int[] integers, RuntimeStats stats) throws Exception;
+    // methods for data loading
+    public abstract void queueBlobInsert(String key, byte[] value, RuntimeStats stats) throws Exception;
+    public abstract void queueInsertIntegerSet(String key, int[] integers, RuntimeStats stats) throws Exception;
 
-	// methods for blob operations
-	public abstract void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception;
-	public abstract void queueBlobGet(String key, RuntimeStats stats) throws Exception;
+    // methods for blob operations
+    public abstract void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception;
+    public abstract void queueBlobGet(String key, RuntimeStats stats) throws Exception;
 
-	// methods for multi-column integer operations
-	public abstract void queueManyIntsOp(String key, int readIndex, int writeIndex, int randValue, RuntimeStats stats) throws Exception;
+    // methods for multi-column integer operations
+    public abstract void queueManyIntsOp(String key, int readIndex, int writeIndex, int randValue, RuntimeStats stats) throws Exception;
 
-	// methods for batches of multi-column integer operations
-	public abstract void queueManyIntsOpBatched(String key, int[] readIndices, int[] writeIndices, int[] randValues, RuntimeStats stats) throws Exception;
+    // methods for batches of multi-column integer operations
+    public abstract void queueManyIntsOpBatched(String key, int[] readIndices, int[] writeIndices, int[] randValues, RuntimeStats stats) throws Exception;
 }

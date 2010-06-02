@@ -39,12 +39,12 @@ import com.danga.MemCached.SockIOPool;
 
 public class MySQLConnection extends StorageLayerConnection {
 
-	// sql for benchmark 1
-	static final String insertBlobSQL      = "INSERT INTO `blobdata` (`keycolumn`, `valuecolumn`) VALUES (?, ?);";
-	static final String updateBlobSQL      = "UPDATE `blobdata` SET `valuecolumn` = ? WHERE `keycolumn` = ?;";
-	static final String getBlobSQL         = "SELECT `keycolumn`, `valuecolumn` FROM `blobdata` WHERE `keycolumn` = ?;";
+    // sql for benchmark 1
+    static final String insertBlobSQL      = "INSERT INTO `blobdata` (`keycolumn`, `valuecolumn`) VALUES (?, ?);";
+    static final String updateBlobSQL      = "UPDATE `blobdata` SET `valuecolumn` = ? WHERE `keycolumn` = ?;";
+    static final String getBlobSQL         = "SELECT `keycolumn`, `valuecolumn` FROM `blobdata` WHERE `keycolumn` = ?;";
 
-	// sql for benchmarks 2 and 3
+    // sql for benchmarks 2 and 3
     static final String insertIntsTemplate = "INSERT INTO `manyints` VALUES (%s?);";
     static final String updateIntsTemplate = "UPDATE `manyints` SET `col%d` = ? WHERE `keycolumn` = ?;";
     static final String getIntsTemplate    = "SELECT `col%d` FROM `manyints` WHERE `keycolumn` = ?;";
@@ -72,31 +72,31 @@ public class MySQLConnection extends StorageLayerConnection {
     boolean autoCommit = false;
 
     // mysql client
-	Connection conn = null;
+    Connection conn = null;
     Statement stmt = null;
 
     // memcache client if used
     MemCachedClient mcc = null;
 
-	@Override
-	public void close() throws Exception {
-		conn.close();
-	}
+    @Override
+    public void close() throws Exception {
+        conn.close();
+    }
 
-	@Override
-	public void initializeAndConnect(KVConfig config) throws Exception {
-		assert(config != null);
-		assert(config.serverHosts.length == 1);
-		assert(config.serverHosts[0] != null);
+    @Override
+    public void initializeAndConnect(KVConfig config) throws Exception {
+        assert(config != null);
+        assert(config.serverHosts.length == 1);
+        assert(config.serverHosts[0] != null);
 
-		// benchmark 3 just calls benchmark 2 10 times
-		// don't commit 10 times if running benchmark 3
-		if (config.benchmarkLevel == KVConfig.BATCH_BENCH)
-			commitIntsOp = false;
+        // benchmark 3 just calls benchmark 2 10 times
+        // don't commit 10 times if running benchmark 3
+        if (config.benchmarkLevel == KVConfig.BATCH_BENCH)
+            commitIntsOp = false;
 
-		// connect to mysql
-		String dbURL = String.format("jdbc:mysql://%s/kv?user=%s&password=%s",
-				config.mysqlUser, config.mysqlPassword, config.serverHosts[0]);
+        // connect to mysql
+        String dbURL = String.format("jdbc:mysql://%s/kv?user=%s&password=%s",
+                config.mysqlUser, config.mysqlPassword, config.serverHosts[0]);
         conn =  DriverManager.getConnection(dbURL);
         conn.setAutoCommit(autoCommit);
         stmt = conn.createStatement();
@@ -125,55 +125,55 @@ public class MySQLConnection extends StorageLayerConnection {
 
         // decide about procs
         useprocs = config.mysqlUseProcedures == 1;
-	}
+    }
 
-	/**
-	 * Initialize a connection to memcached. This code is basically from
-	 * the memcached website.
-	 */
-	void initMemcache(KVConfig config) {
-	    mcc = new MemCachedClient();
+    /**
+     * Initialize a connection to memcached. This code is basically from
+     * the memcached website.
+     */
+    void initMemcache(KVConfig config) {
+        mcc = new MemCachedClient();
 
-	    // server list and weights
-	    String[] servers = { config.serverHosts[0] + ":1624" };
-	    Integer[] weights = { 1 };
+        // server list and weights
+        String[] servers = { config.serverHosts[0] + ":1624" };
+        Integer[] weights = { 1 };
 
-	    // grab an instance of our connection pool
-	    SockIOPool pool = SockIOPool.getInstance();
+        // grab an instance of our connection pool
+        SockIOPool pool = SockIOPool.getInstance();
 
-	    // set the servers and the weights
-	    pool.setServers( servers );
-	    pool.setWeights( weights );
+        // set the servers and the weights
+        pool.setServers( servers );
+        pool.setWeights( weights );
 
-	    // set some basic pool settings
-	    // 5 initial, 5 min, and 250 max conns
-	    // and set the max idle time for a conn
-	    // to 6 hours
-	    pool.setInitConn( 5 );
-	    pool.setMinConn( 5 );
-	    pool.setMaxConn( 250 );
-	    pool.setMaxIdle( 1000 * 60 * 60 * 6 );
+        // set some basic pool settings
+        // 5 initial, 5 min, and 250 max conns
+        // and set the max idle time for a conn
+        // to 6 hours
+        pool.setInitConn( 5 );
+        pool.setMinConn( 5 );
+        pool.setMaxConn( 250 );
+        pool.setMaxIdle( 1000 * 60 * 60 * 6 );
 
-	    // set the sleep for the maint thread
-	    // it will wake up every x seconds and
-	    // maintain the pool size
-	    pool.setMaintSleep( 30 );
+        // set the sleep for the maint thread
+        // it will wake up every x seconds and
+        // maintain the pool size
+        pool.setMaintSleep( 30 );
 
-	    // set some TCP settings
-	    // disable nagle
-	    // set the read timeout to 3 secs
-	    // and don't set a connect timeout
-	    pool.setNagle( false );
-	    pool.setSocketTO( 3000 );
-	    pool.setSocketConnectTO( 0 );
+        // set some TCP settings
+        // disable nagle
+        // set the read timeout to 3 secs
+        // and don't set a connect timeout
+        pool.setNagle( false );
+        pool.setSocketTO( 3000 );
+        pool.setSocketConnectTO( 0 );
 
-	    // initialize the connection pool
-	    pool.initialize();
-	}
+        // initialize the connection pool
+        pool.initialize();
+    }
 
-	@Override
+    @Override
     public void queueBlobInsert(String key, byte[] value, RuntimeStats stats) throws Exception {
-	    long startTime = stats.puts.noteSent();
+        long startTime = stats.puts.noteSent();
 
         // MYSQL INSERTION
         stmtBlobInsert.setString(1, key);
@@ -194,21 +194,21 @@ public class MySQLConnection extends StorageLayerConnection {
         // MEMCACHE INSERTION
         if (usecache) mcc.set(key, value);
 
-	    stats.puts.noteReceived(startTime);
-	}
+        stats.puts.noteReceived(startTime);
+    }
 
-	@Override
-	public void queueInsertIntegerSet(String key, int[] values, RuntimeStats stats) throws Exception {
-	    long startTime = stats.puts.noteSent();
+    @Override
+    public void queueInsertIntegerSet(String key, int[] values, RuntimeStats stats) throws Exception {
+        long startTime = stats.puts.noteSent();
 
-	    assert(values.length == KVConfig.INT_COLUMN_COUNT);
+        assert(values.length == KVConfig.INT_COLUMN_COUNT);
 
-	    // MYSQL INSERTION
-	    stmtIntsInsert.setString(1, key);
-	    for (int i = 0; i < KVConfig.INT_COLUMN_COUNT; i++) {
-	        stmtIntsInsert.setInt(i + 2, values[i]);
-	    }
-	    int res = stmtIntsInsert.executeUpdate();
+        // MYSQL INSERTION
+        stmtIntsInsert.setString(1, key);
+        for (int i = 0; i < KVConfig.INT_COLUMN_COUNT; i++) {
+            stmtIntsInsert.setInt(i + 2, values[i]);
+        }
+        int res = stmtIntsInsert.executeUpdate();
         if (res != 1) {
             SQLWarning warning = stmtIntsInsert.getWarnings();
             while (warning != null) {
@@ -224,59 +224,59 @@ public class MySQLConnection extends StorageLayerConnection {
         // MEMCACHE INSERTION
         if (usecache) mcc.set(key, values);
 
-	    stats.puts.noteReceived(startTime);
+        stats.puts.noteReceived(startTime);
     }
 
-	@Override
-	public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
-		long startTime = stats.gets.noteSent();
+    @Override
+    public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
+        long startTime = stats.gets.noteSent();
 
-		// MEMCACHE GET
-		if (usecache) {
-		    Object value = mcc.get(key);
-		    if (value != null) {
-		        stats.gets.noteReceived(startTime);
-		        return;
-		    }
-		}
+        // MEMCACHE GET
+        if (usecache) {
+            Object value = mcc.get(key);
+            if (value != null) {
+                stats.gets.noteReceived(startTime);
+                return;
+            }
+        }
 
-		// MYSQL GET
-		stmtBlobGet.setString(1, key);
-		ResultSet res = stmtBlobGet.executeQuery();
-		if (!res.next()) {
-			System.err.printf("Get missed for key: %s on get # %d.\n", key, stats.gets.numSent.get());
-			System.exit(-1);
-		}
-		if (!autoCommit) conn.commit();
+        // MYSQL GET
+        stmtBlobGet.setString(1, key);
+        ResultSet res = stmtBlobGet.executeQuery();
+        if (!res.next()) {
+            System.err.printf("Get missed for key: %s on get # %d.\n", key, stats.gets.numSent.get());
+            System.exit(-1);
+        }
+        if (!autoCommit) conn.commit();
 
-		stats.gets.noteReceived(startTime);
-	}
+        stats.gets.noteReceived(startTime);
+    }
 
-	@Override
-	public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
-		long startTime = stats.puts.noteSent();
+    @Override
+    public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
+        long startTime = stats.puts.noteSent();
 
-		// MYSQL PUT
-		stmtBlobUpdate.setBytes(1, value);
-		stmtBlobUpdate.setString(2, key);
-		int res = stmtBlobUpdate.executeUpdate();
-		if (res != 1) {
-			SQLWarning warning = stmtBlobUpdate.getWarnings();
-			while (warning != null) {
-				System.err.printf("SQL Warning: %s\n", warning.getMessage());
-				warning = warning.getNextWarning();
-			}
-			System.err.printf("Put failed update for key %s on put # %d with updated count %d\n.",
-					key, stats.puts.numSent.get(), res);
-			System.exit(-1);
-		}
-		if (!autoCommit) conn.commit();
+        // MYSQL PUT
+        stmtBlobUpdate.setBytes(1, value);
+        stmtBlobUpdate.setString(2, key);
+        int res = stmtBlobUpdate.executeUpdate();
+        if (res != 1) {
+            SQLWarning warning = stmtBlobUpdate.getWarnings();
+            while (warning != null) {
+                System.err.printf("SQL Warning: %s\n", warning.getMessage());
+                warning = warning.getNextWarning();
+            }
+            System.err.printf("Put failed update for key %s on put # %d with updated count %d\n.",
+                    key, stats.puts.numSent.get(), res);
+            System.exit(-1);
+        }
+        if (!autoCommit) conn.commit();
 
-		// MEMCACHE PUT
+        // MEMCACHE PUT
         if (usecache) mcc.set(key, value);
 
-		stats.puts.noteReceived(startTime);
-	}
+        stats.puts.noteReceived(startTime);
+    }
 
     @Override
     public void queueManyIntsOp(String key, int readIndex, int writeIndex, int randValue, RuntimeStats stats) throws Exception {
@@ -351,7 +351,7 @@ public class MySQLConnection extends StorageLayerConnection {
             }
         }
         if (commitIntsOp)
-        	if (!autoCommit) conn.commit();
+            if (!autoCommit) conn.commit();
 
         stats.puts.noteReceived(startTime);
     }
@@ -367,20 +367,20 @@ public class MySQLConnection extends StorageLayerConnection {
     /**
      * Reset the schema and stored procs so we have a fresh empty database.
      */
-	public static void resetData(KVConfig config) {
-		assert(config != null);
-		assert(config.serverHosts.length == 1);
-		assert(config.serverHosts[0] != null);
+    public static void resetData(KVConfig config) {
+        assert(config != null);
+        assert(config.serverHosts.length == 1);
+        assert(config.serverHosts[0] != null);
 
-		System.out.println("Beginning mysql data and schema reset.");
+        System.out.println("Beginning mysql data and schema reset.");
 
-		String dbURL = String.format("jdbc:mysql://%s/kv?user=root&password=mysql", config.serverHosts[0]);
+        String dbURL = String.format("jdbc:mysql://%s/kv?user=root&password=mysql", config.serverHosts[0]);
 
-		try {
+        try {
             Connection conn =  DriverManager.getConnection(dbURL);
             Statement stmt = conn.createStatement();
 
-	        // drop the table if it exists
+            // drop the table if it exists
             stmt.executeUpdate("DROP TABLE IF EXISTS `blobdata`;");
             stmt.executeUpdate("DROP TABLE IF EXISTS `manyints`;");
 
@@ -396,7 +396,7 @@ public class MySQLConnection extends StorageLayerConnection {
                 intsBody += String.format("`col%d` INTEGER(4) NOT NULL, ", i);
             }
 
-	        // create the table
+            // create the table
             stmt.executeUpdate(blobTablePrefix + blobBody + suffix);
             stmt.executeUpdate(intsTablePrefix + intsBody + suffix);
 
@@ -405,20 +405,20 @@ public class MySQLConnection extends StorageLayerConnection {
             conn.close();
 
             System.out.println("Finished mysql data and schema reset.");
-		}
+        }
         catch (Exception ex) {
-        	// fail fast
+            // fail fast
             ex.printStackTrace();
             System.exit(-1);
         }
-	}
+    }
 
-	/**
-	 * Load/replace a mysql stored proc to do benchmark 2.
-	 */
-	public static void loadStoredProcs(KVConfig config, Connection conn, Statement stmt) throws Exception {
-	    for (int i = 0; i < KVConfig.INT_COLUMN_COUNT; i++) {
-	        // drop the procedures if they exist
+    /**
+     * Load/replace a mysql stored proc to do benchmark 2.
+     */
+    public static void loadStoredProcs(KVConfig config, Connection conn, Statement stmt) throws Exception {
+        for (int i = 0; i < KVConfig.INT_COLUMN_COUNT; i++) {
+            // drop the procedures if they exist
             stmt.executeUpdate(String.format("DROP PROCEDURE IF EXISTS `manyintsop%d`;", i));
 
             StringBuilder sb = new StringBuilder();

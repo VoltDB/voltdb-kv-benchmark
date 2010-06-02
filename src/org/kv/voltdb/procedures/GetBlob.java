@@ -37,7 +37,7 @@ public class GetBlob extends VoltProcedure {
 
     public VoltTable run(String strKey) {
 
-    	// execute the sql
+        // execute the sql
         voltQueueSQL(getData, strKey);
         VoltTable vtReturn = voltExecuteSQL(true)[0];
 

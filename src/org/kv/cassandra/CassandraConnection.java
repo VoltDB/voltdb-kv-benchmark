@@ -51,28 +51,28 @@ public class CassandraConnection extends StorageLayerConnection {
     static final String INTS_COL_FAMILY = "ManyInts";
 
     // thrift transports to each server
-	TTransport[] transports;
-	// thrift clients for each server
-	Cassandra.Client[] clients;
-	// index of next server to use
-	int currentClientIndex = 0;
+    TTransport[] transports;
+    // thrift clients for each server
+    Cassandra.Client[] clients;
+    // index of next server to use
+    int currentClientIndex = 0;
 
-	// see Cassandra docs for the meaning of these
-	ConsistencyLevel writeConsistency;
-	ConsistencyLevel readConsistency;
+    // see Cassandra docs for the meaning of these
+    ConsistencyLevel writeConsistency;
+    ConsistencyLevel readConsistency;
 
-	@Override
-	public void initializeAndConnect(KVConfig config) throws Exception {
-		assert(config.serverHosts.length > 0);
+    @Override
+    public void initializeAndConnect(KVConfig config) throws Exception {
+        assert(config.serverHosts.length > 0);
 
-		writeConsistency = consistencyLevelFromString(config.cassWriteConsistencyLevel);
-		readConsistency = consistencyLevelFromString(config.cassReadConsistencyLevel);
+        writeConsistency = consistencyLevelFromString(config.cassWriteConsistencyLevel);
+        readConsistency = consistencyLevelFromString(config.cassReadConsistencyLevel);
 
-		int hostCount = config.serverHosts.length;
-		transports = new TTransport[hostCount];
-		clients = new Cassandra.Client[hostCount];
+        int hostCount = config.serverHosts.length;
+        transports = new TTransport[hostCount];
+        clients = new Cassandra.Client[hostCount];
 
-		// for each server, connect
+        // for each server, connect
         for (int i = 0; i < hostCount; i++) {
 
             TTransport transport;
@@ -85,9 +85,9 @@ public class CassandraConnection extends StorageLayerConnection {
             transports[i] = transport;
             clients[i] = client;
         }
-	}
+    }
 
-	@Override
+    @Override
     public void close() throws Exception {
         for (TTransport transport : transports) {
             transport.flush();
@@ -108,7 +108,7 @@ public class CassandraConnection extends StorageLayerConnection {
 
         if (keyExists(key, BLOB_COL_FAMILY)) {
 
-        	// if it exists, overwrite (following Cassandra examples)
+            // if it exists, overwrite (following Cassandra examples)
 
             Column column = new Column("value".getBytes("utf-8"), value, timestamp);
 
@@ -125,14 +125,14 @@ public class CassandraConnection extends StorageLayerConnection {
             job.put(BLOB_COL_FAMILY, mutations);
 
             Map<String, Map<String, List<Mutation>>> batch =
-            	new HashMap<String, Map<String, List<Mutation>>>();
+                new HashMap<String, Map<String, List<Mutation>>>();
             batch.put(key, job);
 
             clients[currentClientIndex].batch_mutate(KEYSPACE, batch, writeConsistency);
         }
         else {
 
-        	// if no key, insert
+            // if no key, insert
 
             ColumnPath path = new ColumnPath(BLOB_COL_FAMILY);
             path.column = "value".getBytes("utf-8");
@@ -181,66 +181,66 @@ public class CassandraConnection extends StorageLayerConnection {
         currentClientIndex = (currentClientIndex + 1) % clients.length;
     }
 
-	@Override
-	public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
-		long startTime = stats.gets.noteSent();
+    @Override
+    public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
+        long startTime = stats.gets.noteSent();
 
-		// we don't verify the data... probably should
-		boolean exists = keyExists(key, BLOB_COL_FAMILY);
-		assert(exists);
+        // we don't verify the data... probably should
+        boolean exists = keyExists(key, BLOB_COL_FAMILY);
+        assert(exists);
 
-		stats.gets.noteReceived(startTime);
-
-        // round robin to the next server node
-		currentClientIndex = (currentClientIndex + 1) % clients.length;
-	}
-
-	@Override
-	public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
-		long startTime = stats.puts.noteSent();
-
-		// need a timestamp for Cassandra writes
-		long timestamp = System.currentTimeMillis();
-
-		Column column = new Column("value".getBytes("utf-8"), value, timestamp);
-
-		ColumnOrSuperColumn columnOrSuperColumn = new ColumnOrSuperColumn();
-		columnOrSuperColumn.setColumn(column);
-
-		Mutation mutation = new Mutation();
-		mutation.setColumn_or_supercolumn(columnOrSuperColumn);
-
-		List<Mutation> mutations = new ArrayList<Mutation>();
-		mutations.add(mutation);
-
-		Map<String, List<Mutation>> job = new HashMap<String, List<Mutation>>();
-		job.put(BLOB_COL_FAMILY, mutations);
-
-		Map<String, Map<String, List<Mutation>>> batch =
-		    new HashMap<String, Map<String, List<Mutation>>>();
-		batch.put(key, job);
-
-		clients[currentClientIndex].batch_mutate(KEYSPACE, batch, writeConsistency);
-
-		stats.puts.noteReceived(startTime);
+        stats.gets.noteReceived(startTime);
 
         // round robin to the next server node
-		currentClientIndex = (currentClientIndex + 1) % clients.length;
-	}
+        currentClientIndex = (currentClientIndex + 1) % clients.length;
+    }
 
-	@Override
+    @Override
+    public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
+        long startTime = stats.puts.noteSent();
+
+        // need a timestamp for Cassandra writes
+        long timestamp = System.currentTimeMillis();
+
+        Column column = new Column("value".getBytes("utf-8"), value, timestamp);
+
+        ColumnOrSuperColumn columnOrSuperColumn = new ColumnOrSuperColumn();
+        columnOrSuperColumn.setColumn(column);
+
+        Mutation mutation = new Mutation();
+        mutation.setColumn_or_supercolumn(columnOrSuperColumn);
+
+        List<Mutation> mutations = new ArrayList<Mutation>();
+        mutations.add(mutation);
+
+        Map<String, List<Mutation>> job = new HashMap<String, List<Mutation>>();
+        job.put(BLOB_COL_FAMILY, mutations);
+
+        Map<String, Map<String, List<Mutation>>> batch =
+            new HashMap<String, Map<String, List<Mutation>>>();
+        batch.put(key, job);
+
+        clients[currentClientIndex].batch_mutate(KEYSPACE, batch, writeConsistency);
+
+        stats.puts.noteReceived(startTime);
+
+        // round robin to the next server node
+        currentClientIndex = (currentClientIndex + 1) % clients.length;
+    }
+
+    @Override
     public void queueManyIntsOp(String key, int readIndex, int writeIndex, int randValue, RuntimeStats stats) throws Exception {
-	    long startTime = stats.puts.noteSent();
+        long startTime = stats.puts.noteSent();
 
-	    ColumnPath path = new ColumnPath();
-	    path.setColumn_family(INTS_COL_FAMILY);
-	    path.setColumn(new byte[] { (byte) readIndex });
+        ColumnPath path = new ColumnPath();
+        path.setColumn_family(INTS_COL_FAMILY);
+        path.setColumn(new byte[] { (byte) readIndex });
 
-	    ColumnOrSuperColumn result = clients[currentClientIndex].get(KEYSPACE, key, path, readConsistency);
-	    Column col = result.getColumn();
-	    int decisionValue = byteArrayToInt(col.getValue());
+        ColumnOrSuperColumn result = clients[currentClientIndex].get(KEYSPACE, key, path, readConsistency);
+        Column col = result.getColumn();
+        int decisionValue = byteArrayToInt(col.getValue());
 
-	    // if the chosen column is odd, update another column
+        // if the chosen column is odd, update another column
         if ((decisionValue % 2) == 1) {
             long timestamp = System.currentTimeMillis();
             byte[] randValueBytes = intToByteArray(randValue);
@@ -249,10 +249,10 @@ public class CassandraConnection extends StorageLayerConnection {
             clients[currentClientIndex].insert(KEYSPACE, key, path, randValueBytes, timestamp, writeConsistency);
         }
 
-	    stats.puts.noteReceived(startTime);
+        stats.puts.noteReceived(startTime);
 
         // round robin to the next server node
-	    currentClientIndex = (currentClientIndex + 1) % clients.length;
+        currentClientIndex = (currentClientIndex + 1) % clients.length;
     }
 
     @Override

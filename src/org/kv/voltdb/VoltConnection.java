@@ -37,27 +37,27 @@ import org.voltdb.compiler.VoltProjectBuilder;
 
 public class VoltConnection extends StorageLayerConnection {
 
-	// static global client object instance
-	// The VoltDB java client is concurrent, async and fast. There's
-	//  no need to have more than one.
-	static org.voltdb.client.Client globalClient = null;
-	static int connections = 0;
+    // static global client object instance
+    // The VoltDB java client is concurrent, async and fast. There's
+    //  no need to have more than one.
+    static org.voltdb.client.Client globalClient = null;
+    static int connections = 0;
 
-	org.voltdb.client.Client client = null;
+    org.voltdb.client.Client client = null;
 
-	/**
-	 * Represents a callback object used to check the success or
-	 * failure of a benchmark command. It also supports checking
-	 * latency and is responsible for updating the stats counters.
-	 *
-	 */
-	class AsyncCallback implements ProcedureCallback {
-		final RuntimeStats.ProcStats procStats;
-		final long startTime;
+    /**
+     * Represents a callback object used to check the success or
+     * failure of a benchmark command. It also supports checking
+     * latency and is responsible for updating the stats counters.
+     *
+     */
+    class AsyncCallback implements ProcedureCallback {
+        final RuntimeStats.ProcStats procStats;
+        final long startTime;
 
         public AsyncCallback(RuntimeStats.ProcStats procStats) {
-	        this.procStats = procStats;
-	        this.startTime = procStats.noteSent();
+            this.procStats = procStats;
+            this.startTime = procStats.noteSent();
         }
 
         @Override
@@ -75,124 +75,124 @@ public class VoltConnection extends StorageLayerConnection {
         }
     }
 
-	@Override
-	public synchronized void initializeAndConnect(KVConfig config) throws Exception {
-		// note this method is synchronized
+    @Override
+    public synchronized void initializeAndConnect(KVConfig config) throws Exception {
+        // note this method is synchronized
 
-		assert(config.serverHosts.length > 0);
+        assert(config.serverHosts.length > 0);
 
-		// if this is the first client thread, create the single global client
-		if (globalClient == null) {
-			globalClient = ClientFactory.createClient();
-			for (String host : config.serverHosts) {
-				assert(host != null);
-	            globalClient.createConnection(host, "program", "none");
-			}
-		}
+        // if this is the first client thread, create the single global client
+        if (globalClient == null) {
+            globalClient = ClientFactory.createClient();
+            for (String host : config.serverHosts) {
+                assert(host != null);
+                globalClient.createConnection(host, "program", "none");
+            }
+        }
 
-		client = globalClient;
-		connections++;
-	}
+        client = globalClient;
+        connections++;
+    }
 
-	@Override
+    @Override
     public void syncUp() throws Exception {
-		// this call blocks until all outstanding async calls have returned
+        // this call blocks until all outstanding async calls have returned
         client.drain();
     }
 
-	@Override
+    @Override
     public synchronized void close() throws Exception {
-		// if this is the last connection open (all connections share one client),
-		// 	then close the connection
+        // if this is the last connection open (all connections share one client),
+        //  then close the connection
         if (--connections == 0) {
             globalClient = null;
             client.close();
         }
     }
 
-	@Override
+    @Override
     public void queueBlobInsert(String key, byte[] value, RuntimeStats stats) throws Exception {
-	    // blob support for VoltDB is forthcoming... use string for now
-		String safeValue = new String(value);
+        // blob support for VoltDB is forthcoming... use string for now
+        String safeValue = new String(value);
 
-	    AsyncCallback cb = new AsyncCallback(stats.puts);
+        AsyncCallback cb = new AsyncCallback(stats.puts);
 
         boolean queued = false;
         while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
+            // async invoke stored proc. cb callback gets called when response is received
             queued = client.callProcedure(cb, "InsertBlob", key, safeValue);
 
             // if queued if false, the server has told the client to slow down
             if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
-                client.backpressureBarrier();
-            }
-        }
-	}
-
-	@Override
-    public void queueInsertIntegerSet(String key, int[] values, RuntimeStats stats) throws Exception {
-	    AsyncCallback cb = new AsyncCallback(stats.puts);
-
-        boolean queued = false;
-        while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
-            queued = client.callProcedure(cb, InsertInts.class.getSimpleName(), key, values);
-
-            // if queued if false, the server has told the client to slow down
-            if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
+                // block until the VoltDB client thinks the server is ready for more work
                 client.backpressureBarrier();
             }
         }
     }
 
-	@Override
-	public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
-		AsyncCallback cb = new AsyncCallback(stats.gets);
+    @Override
+    public void queueInsertIntegerSet(String key, int[] values, RuntimeStats stats) throws Exception {
+        AsyncCallback cb = new AsyncCallback(stats.puts);
 
-		boolean queued = false;
+        boolean queued = false;
         while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
+            // async invoke stored proc. cb callback gets called when response is received
+            queued = client.callProcedure(cb, InsertInts.class.getSimpleName(), key, values);
+
+            // if queued if false, the server has told the client to slow down
+            if (!queued) {
+                // block until the VoltDB client thinks the server is ready for more work
+                client.backpressureBarrier();
+            }
+        }
+    }
+
+    @Override
+    public void queueBlobGet(String key, RuntimeStats stats) throws Exception {
+        AsyncCallback cb = new AsyncCallback(stats.gets);
+
+        boolean queued = false;
+        while (!queued) {
+            // async invoke stored proc. cb callback gets called when response is received
             queued = client.callProcedure(cb, GetBlob.class.getSimpleName(), key);
 
             // if queued if false, the server has told the client to slow down
             if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
+                // block until the VoltDB client thinks the server is ready for more work
                 client.backpressureBarrier();
             }
         }
-  	}
+    }
 
-	@Override
-	public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
-		AsyncCallback cb = new AsyncCallback(stats.puts);
+    @Override
+    public void queueBlobPut(String key, byte[] value, RuntimeStats stats) throws Exception {
+        AsyncCallback cb = new AsyncCallback(stats.puts);
 
         boolean queued = false;
         while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
+            // async invoke stored proc. cb callback gets called when response is received
             queued = client.callProcedure(cb, UpdateBlob.class.getSimpleName(), key, value);
 
             // if queued if false, the server has told the client to slow down
             if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
+                // block until the VoltDB client thinks the server is ready for more work
                 client.backpressureBarrier();
             }
         }
-  	}
+    }
 
-	@Override
+    @Override
     public void queueManyIntsOp(String key, int readIndex, int writeIndex, int randValue, RuntimeStats stats) throws Exception {
-	    AsyncCallback cb = new AsyncCallback(stats.puts);
+        AsyncCallback cb = new AsyncCallback(stats.puts);
 
         boolean queued = false;
         while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
+            // async invoke stored proc. cb callback gets called when response is received
             queued = client.callProcedure(cb, ManyInts.class.getSimpleName(), key, readIndex, writeIndex, randValue);
 
             // if queued if false, the server has told the client to slow down
             if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
+                // block until the VoltDB client thinks the server is ready for more work
                 client.backpressureBarrier();
             }
         }
@@ -204,56 +204,56 @@ public class VoltConnection extends StorageLayerConnection {
 
         boolean queued = false;
         while (!queued) {
-        	// async invoke stored proc. cb callback gets called when response is received
+            // async invoke stored proc. cb callback gets called when response is received
             queued = client.callProcedure(cb, ManyIntsBatched.class.getSimpleName(), key, readIndices, writeIndices, randValues);
 
             // if queued if false, the server has told the client to slow down
             if (!queued) {
-            	// block until the VoltDB client thinks the server is ready for more work
+                // block until the VoltDB client thinks the server is ready for more work
                 client.backpressureBarrier();
             }
         }
     }
 
-	/**
-	 * Build a VoltDB application catalog for the benchmark with a given
-	 * deployment configuration. Note: K=0 means 1 copy, K=1 means 2 copies, etc..
-	 * Leader is only special during cluster bootstrap; it can be any node.
-	 *
-	 * @param args Array of:
-	 *   Site Per Host, Number of Hosts, K-Factor, Hostname of Leader
-	 */
-	public static void main(String[] args) {
-		// defaults
-		int sitesPerHost = 1;
-		int hosts = 1;
-		int kfactor = 0;
-		String leader = "localhost";
+    /**
+     * Build a VoltDB application catalog for the benchmark with a given
+     * deployment configuration. Note: K=0 means 1 copy, K=1 means 2 copies, etc..
+     * Leader is only special during cluster bootstrap; it can be any node.
+     *
+     * @param args Array of:
+     *   Site Per Host, Number of Hosts, K-Factor, Hostname of Leader
+     */
+    public static void main(String[] args) {
+        // defaults
+        int sitesPerHost = 1;
+        int hosts = 1;
+        int kfactor = 0;
+        String leader = "localhost";
 
-		// parse args
-		if (args.length > 0)
-			sitesPerHost = Integer.parseInt(args[0]);
-		if (args.length > 1)
-			hosts = Integer.parseInt(args[1]);
-		if (args.length > 2)
-			kfactor = Integer.parseInt(args[2]);
-		if (args.length > 3)
-			leader = args[3].trim();
+        // parse args
+        if (args.length > 0)
+            sitesPerHost = Integer.parseInt(args[0]);
+        if (args.length > 1)
+            hosts = Integer.parseInt(args[1]);
+        if (args.length > 2)
+            kfactor = Integer.parseInt(args[2]);
+        if (args.length > 3)
+            leader = args[3].trim();
 
-		// procs used by voltdb
-		Class<?>[] procedures = {
-				GetBlob.class, UpdateBlob.class, InsertInts.class, ManyInts.class, ManyIntsBatched.class
-		};
+        // procs used by voltdb
+        Class<?>[] procedures = {
+                GetBlob.class, UpdateBlob.class, InsertInts.class, ManyInts.class, ManyIntsBatched.class
+        };
 
-		// VoltProjectBuilder is a programmatic way to build VoltDB Project XML files.
-		VoltProjectBuilder builder = new VoltProjectBuilder();
-		builder.addSchema(VoltConnection.class.getResource("ddl.sql"));
-		builder.addProcedures(procedures);
-		builder.addStmtProcedure("InsertBlob", "INSERT INTO BLOBDATA VALUES (?, ?);");
-		builder.addPartitionInfo("BLOBDATA", "KEYCOLUMN");
-		builder.addPartitionInfo("MANYINTS", "KEYCOLUMN");
-		builder.compile("kv.jar", sitesPerHost, hosts, kfactor, leader);
-	}
+        // VoltProjectBuilder is a programmatic way to build VoltDB Project XML files.
+        VoltProjectBuilder builder = new VoltProjectBuilder();
+        builder.addSchema(VoltConnection.class.getResource("ddl.sql"));
+        builder.addProcedures(procedures);
+        builder.addStmtProcedure("InsertBlob", "INSERT INTO BLOBDATA VALUES (?, ?);");
+        builder.addPartitionInfo("BLOBDATA", "KEYCOLUMN");
+        builder.addPartitionInfo("MANYINTS", "KEYCOLUMN");
+        builder.compile("kv.jar", sitesPerHost, hosts, kfactor, leader);
+    }
 
 
 }
